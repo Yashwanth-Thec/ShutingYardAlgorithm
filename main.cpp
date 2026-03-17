@@ -1,17 +1,24 @@
+//Name: Yashwanth Narayan Shravanaboyina Besta
+//Date: 3/17/26
+//Description: This program takes a math expression and converts it from infix to postfix using the shunting yard algorithm, then builds an expression tree and lets the user print it in infix, prefix, or postfix order.
+
 #include <iostream>
 #include <cstring>
 #include "Node.h"
 
 using namespace std;
 
+// Adds a new node to the top of the stack
 void push(Node*& top, Node* newNode){
   if (newNode == nullptr) {
     return;
   }
   newNode->next = top;
+  top = newNode;
 
 }
 
+// Removes and returns the node at the top of the stack
 Node* pop(Node*& top){
   if (top == nullptr){
     return nullptr;
@@ -25,10 +32,12 @@ Node* pop(Node*& top){
 
 }
 
+// Returns the node at the top of the stack without removing it
 Node* peek(Node* top){
   return top;
 }
 
+// Adds a new node to the back of the queue
 void enqueue(Node*& front, Node*& rear, Node* newNode){
   if (newNode == nullptr){
     return;
@@ -38,7 +47,7 @@ void enqueue(Node*& front, Node*& rear, Node* newNode){
 
   if (rear == nullptr){
     front = newNode;
-    rear = nowNode;
+    rear = newNode;
   }
   else {
     rear->next = newNode;
@@ -47,6 +56,7 @@ void enqueue(Node*& front, Node*& rear, Node* newNode){
 
 }
 
+// Removes and returns the node at the front of the queue
 Node* dequeue(Node*& front, Node*& rear) {
   if (front == nullptr){
     return nullptr;
@@ -66,16 +76,19 @@ Node* dequeue(Node*& front, Node*& rear) {
 
 }
 
+// Returns true if the token is a math operator (+, -, *, /)
 bool isOperator(const char* token){
   return strcmp(token, "+") == 0 || strcmp(token, "-") == 0 || strcmp(token, "*") == 0 || strcmp(token, "/") == 0;
 
 }
 
+// Returns true if the token is a single digit number
 bool isNumber(const char* token) {
   return strlen(token) == 1 && isdigit(token[0]);
 
 }
 
+// Returns a number representing how important an operator is (higher = runs first)
 int precedence(const char* op){
   if(strcmp(op,"^") == 0){
     return 3;
@@ -86,30 +99,33 @@ int precedence(const char* op){
   if(strcmp(op, "+") == 0 || strcmp(op,"-") == 0){
     return 1;
   }
-  
+
 
 }
 
+// Returns true if the operator groups right-to-left (like exponents: 2^3^4 = 2^(3^4))
 bool isRightAssociative(const char* op) {
   return strcmp(op, "^") == 0;
-		
+
 
 }
 
-int tokenize(char input[], char token[][20]){
+// Splits the input string into individual tokens (numbers, operators, parentheses)
+int tokenize(char input[], char tokens[][20]){
   int count = 0;
   char* token = strtok(input, " ");
 
   while (token != nullptr){
     strcpy(tokens[count], token);
     count++;
-    token =strtok(nullptr, " ");
+    token = strtok(nullptr, " ");
 
   }
   return count;
 }
 
 
+// Converts an infix expression (like 3 + 4) into postfix (like 3 4 +) using the shunting yard algorithm
 void shuntingYard(char tokens[][20], int tokenCount, Node*& outputFront, Node*& outputRear){
 
   Node* operatorTop = nullptr;
@@ -121,28 +137,28 @@ void shuntingYard(char tokens[][20], int tokenCount, Node*& outputFront, Node*& 
     }
     else if (isOperator(tokens[i])){
       while (peek(operatorTop) != nullptr && isOperator(peek(operatorTop)->data)){
-	chat* topOp = peek(operatorTop)->data;
+        char* topOp = peek(operatorTop)->data;
 
-	bool popLeft = !isRightAssociative(tokens[i]) && precedence(tokes[i]) <= precedence(topOP);
+	bool popLeft = !isRightAssociative(tokens[i]) && precedence(tokens[i]) <= precedence(topOp);
 
-	bool popRight = isRightassociative(tokens[i]) && precedence(tokens[i]) < precedence(topOp);
+	bool popRight = isRightAssociative(tokens[i]) && precedence(tokens[i]) < precedence(topOp);
 
 	if (popLeft || popRight){
 	  enqueue(outputFront, outputRear, pop(operatorTop));
-	  
+
 
 	}
 	else {
 	  break;
 
 	}
-		       
+
       }
 
       push(operatorTop, new Node(tokens[i]));
 
     }
-    else if (strcmp(tokens[i]), "(" == 0) {
+    else if (strcmp(tokens[i], "(") == 0) {
       push(operatorTop, new Node(tokens[i]));
 
     }
@@ -151,12 +167,12 @@ void shuntingYard(char tokens[][20], int tokenCount, Node*& outputFront, Node*& 
 	     strcmp(peek(operatorTop)->data, "(") != 0) {
              enqueue(outputFront, outputRear, pop(operatorTop));
       }
-      if (peel(operatorTop) != nullptr && strcmp(peek(operatorTop)->data, "(")) == 0{
-	  Node* temp = pop(operatorTop);
-	  delete temp;
+      if (peek(operatorTop) != nullptr && strcmp(peek(operatorTop)->data, "(") == 0){
+	      Node* temp = pop(operatorTop);
+	      delete temp;
 	}
     }
-      
+
 
   }
     while (peek(operatorTop) != nullptr) {
@@ -165,8 +181,10 @@ void shuntingYard(char tokens[][20], int tokenCount, Node*& outputFront, Node*& 
     }
 
 }
+
+// Prints all nodes in the queue from front to back
 void print(Node*& front, Node*& rear){
-  Node* tempTop = nullptr;
+  Node* tempFront = nullptr;
   Node* tempRear = nullptr;
 
   while (front != nullptr){
@@ -180,7 +198,8 @@ void print(Node*& front, Node*& rear){
   }
 }
 
-Node* expressionTree(Node*& postfixFront, Node*& postfixrear){
+// This builds a binary expression tree from a postfix expression where the numbers become leaf nodes and operators become parent nodes with two children
+Node* buildExpressionTree(Node*& postfixFront, Node*& postfixRear){
   Node* treeTop = nullptr;
 
   while(postfixFront != nullptr){
@@ -208,6 +227,8 @@ Node* expressionTree(Node*& postfixFront, Node*& postfixrear){
 
 }
 
+// This prints the tree in prefix order (operator first, then left, then right)
+// Example: + 3 4
 void printPrefix(Node* root){
   if(root == nullptr){
     return;
@@ -217,16 +238,20 @@ void printPrefix(Node* root){
   printPrefix(root->right);
 }
 
+// This prints the tree in postfix order (left, then right, then operator)
+// Example: 3 4 +
 void printPostfix(Node* root){
   if(root == nullptr){
     return;
   }
-  cout << root->data << " ";
   printPostfix(root->left);
   printPostfix(root->right);
+  cout << root->data << " ";
 
 }
 
+// This prints the tree in infix order (left, operator, right) with parentheses
+// Example: (3 + 4)
 void printInfix(Node* root){
   if(root == nullptr){
     return;
@@ -247,6 +272,8 @@ void printInfix(Node* root){
   }
 
 }
+
+// This frees all the memory used by the tree by deleting every node
 void deleteTree(Node* root){
   if(root == nullptr){
     return;
@@ -254,4 +281,52 @@ void deleteTree(Node* root){
   deleteTree(root->left);
   deleteTree(root->right);
   delete root;
+}
+
+int main() {
+  char input[200];
+  char tokens[100][20];
+
+  cout << "Enter an infix expression with spaces between each token:" << endl;
+  cin.getline(input, 200);
+
+  int tokenCount = tokenize(input, tokens);
+
+  Node* outputFront = nullptr;
+  Node* outputRear = nullptr;
+
+  shuntingYard(tokens, tokenCount, outputFront, outputRear);
+
+  cout << "Postfix expression:" << endl;
+  print(outputFront, outputRear);
+  cout << endl;
+
+  Node* root = buildExpressionTree(outputFront, outputRear);
+
+  int choice = 0;
+  while (choice != 4) {
+      cout << endl;
+      cout << "1. Print infix" << endl;
+      cout << "2. Print prefix" << endl;
+      cout << "3. Print postfix" << endl;
+      cout << "4. Quit" << endl;
+      cout << "Choice: ";
+      cin >> choice;
+
+      if (choice == 1) {
+          printInfix(root);
+          cout << endl;
+      }
+      else if (choice == 2) {
+          printPrefix(root);
+          cout << endl;
+      }
+      else if (choice == 3) {
+          printPostfix(root);
+          cout << endl;
+      }
+  }
+
+  deleteTree(root);
+  return 0;
 }
